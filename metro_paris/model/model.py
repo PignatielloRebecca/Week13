@@ -94,24 +94,31 @@ class Model:
             self._grafo.add_edge(u_nodo, v_nodo, tempo = tempo_perc)
         """
         # COSTRUISCO UN GRAFO (NON MULTI) NEL QUALE IL PESO DEGLI ARCHI E' IL T. PERCORR.
-        listaConnessioni = DAO.readAllConnessioni()
+        listaConnessioni = DAO.readAllConnessioni() #leggiamo tutte le connessioni
         for c in listaConnessioni:
-            u_nodo = self._dizionario_fermate[c.id_stazP]
+            u_nodo = self._dizionario_fermate[c.id_stazP] # dobbiamo prendere un oggetto ti tipo fermata
             v_nodo = self._dizionario_fermate[c.id_stazA]
             punto_u = (u_nodo.coordX, u_nodo.coordY)
             punto_v = (v_nodo.coordX, v_nodo.coordY)
-            distanza = geodesic(punto_u, punto_v).km
-            velocita = DAO.readVelocita(c._id_linea)
+            distanza = geodesic(punto_u, punto_v).km # convertire due punti in una distanza
+            velocita = DAO.readVelocita(c._id_linea) # chiamo funzione e ottengo velocita
             tempo_perc = distanza / velocita * 60 # Tempo percorrenza in min.
             print(f"Distanza: {distanza}, velocità: {velocita}, tempo_perc: {tempo_perc}")
             if (self._grafo.has_edge(u_nodo, v_nodo)):  # Se l'arco c'è già
                 # Verifico se il tempo di percorrenza appena calcolato è minore di
                 # di quello associato all'arco già presente, se così aggiorno
-                if (self._grafo[u_nodo][v_nodo]["tempo"]>tempo_perc):
-                    self._grafo[u_nodo][v_nodo]["tempo"] = tempo_perc
+                if (self._grafo[u_nodo][v_nodo]["tempo"]>tempo_perc): # per quei nodi, io vado a specificare il peso ["tempo"]
+                    self._grafo[u_nodo][v_nodo]["tempo"] = tempo_perc # allora lo sostituisco, perche potrebbe essere piu basso
             else:  # Altrimenti lo aggiungo
                 self._grafo.add_edge(u_nodo, v_nodo, tempo=tempo_perc)
 
         print(self._grafo)
 
+    def getPercosoMinimo(self, idStazPartenza, idStazArrivo):
+        vSource=self._dizionario_fermate[idStazPartenza]
+        vTarget=self._dizionario_fermate[idStazArrivo]
+
+        # restituisce lunghezza, percorso
+        costo, percorso=nx.single_source_dijkstra(self._grafo, vSource, vTarget, weight='tempo')
+        return costo, percorso
 
